@@ -1,0 +1,57 @@
+services:
+  api:
+    image: web-downloader-api:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./config:/app/config
+      - ./downloads:/app/downloads
+    restart: unless-stopped
+
+  grok:
+    image: web-downloader:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./config:/app/config
+      - ./downloads:/app/downloads
+    working_dir: /app
+    command: ["--help"]
+
+  instagram:
+    image: web-downloader:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./config:/app/config
+      - ./downloads:/app/downloads
+    working_dir: /app
+    entrypoint: ["instagram-downloader"]
+    command: ["--help"]
+
+  peeks:
+    image: web-downloader:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./config:/app/config
+      - ./downloads:/app/downloads
+    working_dir: /app
+    entrypoint: ["peeks-downloader"]
+    command: ["--help"]
+
+# Usage examples:
+# 1) Build:
+#    docker compose build
+#
+# 2) Run Grok help:
+#    docker compose run --rm grok --help
+#
+# 3) Run Instagram help:
+#    docker compose run --rm instagram --help
