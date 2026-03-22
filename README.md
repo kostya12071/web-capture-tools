@@ -1,19 +1,79 @@
 # Web Capture Tools
 
-A heavy-duty web research and analysis suite for deep browser session recording, network traffic interception, and scraper design-time development.
+A heavy-duty web research and analysis suite for deep browser session recording, network traffic interception, cookie capture, and scraper design-time development.
 
 ## Project Structure
 
-- lib/capture/: Core engine for browser orchestration and session management.
-  - rowser/: Low-level Playwright/Chrome profile management.
+- **lib/capture/**: Core engine for browser orchestration and session management.
+  - browser/: Low-level Playwright/Chrome profile management.
   - core/engine.py: The WebCaptureEngine, the primary entry point for research sessions.
-  - 
-etwork/: Interceptors for capturing and analyzing XHR/Fetch traffic.
+  - network/: Interceptors for capturing and analyzing XHR/Fetch traffic.
   - storage/: Handlers for session persistence, cookies, and local profiles.
-- scripts/: CLI tools for interactive and automated research.
-  - web-capture-cli.py: The main research interface.
+- **lib/cookies/**: Lightweight CDP-based cookie extraction (no Playwright dependency).
+  - cdp_client.py: Async Chrome DevTools Protocol client via WebSocket.
+  - browser_launcher.py: Cross-platform Chrome launch with CDP debugging.
+  - profile_manager.py: JSON profile I/O with key-based matching and auto-naming.
+  - cli.py: Command-line interface for cookie capture.
+- **scripts/**: CLI tools for interactive and automated research.
+  - web-capture-cli.py: The main research interface (Playwright-based).
+  - capture-cookies.py: Generic cookie capture tool (CDP-based, no Playwright).
   - launch-login.ps1: Utility for managing persistent Chrome logins.
-- docs/: Extensive documentation on the Web Capture Framework and Peeks architecture.
+- **docs/**: Extensive documentation on the Web Capture Framework and Peeks architecture.
+
+## Cookie Capture Tool
+
+The `capture-cookies.py` script is a lightweight, Playwright-free tool for extracting browser cookies via Chrome DevTools Protocol.
+
+### Usage
+
+```bash
+python scripts/capture-cookies.py <domain> <output_file> --cookies <names> --key <field> [options]
+```
+
+### Examples
+
+```bash
+# Grok cookies (with field mapping)
+python scripts/capture-cookies.py grok.com config/grok_profiles.json \
+    --cookies cf_clearance,sso,x-userid --key user_id --mapping x-userid:user_id --launch
+
+# Instagram cookies (auto-name new profiles)
+python scripts/capture-cookies.py instagram.com config/instagram_profiles.json \
+    --cookies sessionid,csrftoken,ds_user_id --key ds_user_id --launch --auto
+
+# Peeks cookies (connect to existing browser)
+python scripts/capture-cookies.py peeks.com config/peeks_profiles.json \
+    --cookies session --key user_id
+```
+
+### Options
+
+| Flag | Description |
+|------|-------------|
+| `--cookies` | Required. Comma-separated cookie names to capture |
+| `--key` | Required. Field that identifies unique users (for profile matching) |
+| `--launch` | Launch Chrome if not running |
+| `--auto` | Auto-assign profile names (profile1, profile2...) for new users |
+| `--close` | Close browser after capturing cookies |
+| `--mapping` | Cookie-to-field name mapping (e.g., `x-userid:user_id`) |
+| `--port` | CDP port (default: 9222) |
+| `--profile-dir` | Chrome user data directory |
+
+### Profile Format
+
+Profiles are saved as a JSON array:
+
+```json
+[
+  {
+    "name": "profile1",
+    "cf_clearance": "...",
+    "sso": "...",
+    "user_id": "abc-123",
+    "last_updated": "2026-03-21 15:30:00"
+  }
+]
+```
 
 ## Maintenance Guidelines
 
